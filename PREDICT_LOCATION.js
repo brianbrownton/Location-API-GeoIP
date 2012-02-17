@@ -20,6 +20,7 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 		geo_ip_url,
 		load_flag = false,
 		textad_geo, //going to store or json geo response
+		output_select_ids = [],
 		buildLink = function(type)
 		{
 			//set these 2 as variables because referencing the DOM is costly (performance) in JS
@@ -77,8 +78,9 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 			"va" : "us51" //virginia
 		}
 	
-	obj.init = function(geoLoc){
+	obj.init = function(geoLoc, countryDomId, regionDomId, cityDomId){
 		geo_ip_url = geoLoc;
+		output_select_ids = [countryDomId, regionDomId, cityDomId];
 		PREDICT_LOCATION.testjQuery();
 	}
 
@@ -139,25 +141,29 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 			selector = xml.getElementsByTagName("list")[0].getAttribute("name"),
 			list = [],
 			val = [],
-			opt = xml.getElementsByTagName("option"),
+			option_list = xml.getElementsByTagName("option"),
+			$option_tpl = $('<option></option>'),
+			$select,
+			$insert_option,
+			option_value,
 			i,
-			len = opt.length;
+			len = option_list.length;
 		
 		//throw xml options into string array
 		for(i=0; i<len; i++)
-			list.push(opt[i].childNodes[0].nodeValue.toLowerCase());
+			list.push(option_list[i].childNodes[0].nodeValue.toLowerCase());
 		
 		if(selector==="sel_locCountry"){
 			ind = list.indexOf(textad_geo.country_name);
 			if(ind !== -1){
-				console.log('country set - '+ind+' : '+list[ind]+'['+opt[ind].getAttribute("value")+']');
-				dating.country = opt[ind].getAttribute("value");
+				console.log('country set - '+ind+' : '+list[ind]+'['+option_list[ind].getAttribute("value")+']');
+				dating.country = option_list[ind].getAttribute("value");
 			}
 			else{
 				//fallback, try matching based on country code
 				list = [];
 				for(i=0; i<len; i++)
-					list.push(opt[i].getAttribute("value").toLowerCase());
+					list.push(option_list[i].getAttribute("value").toLowerCase());
 				
 				ind = list.indexOf(textad_geo.country_code);
 				if(ind !== -1){
@@ -170,10 +176,18 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 				}
 			}
 			
-			//mark the match as selected and make the list public
-			$(opt[ind]).attr("selected", "selected");
-			obj.sel_locCountry = opt;
 			
+			obj.sel_locCountry = [];
+			$select = $('#'+output_select_ids[0]).appendTo('body');
+
+			$.each(option_list, function(inde, valu){
+				option_value = valu.getAttribute("value");
+				$insert_option = $option_tpl.clone().text(valu.childNodes[0].nodeValue).attr("value", option_value)
+				if(option_value == dating.country)$insert_option.attr("selected", "selected");
+				obj.sel_locCountry.push($insert_option);
+				$select.append($insert_option);
+			});
+
 			PREDICT_LOCATION.datingLocation();
 			return;
 		}
@@ -191,12 +205,12 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 			
 			interface_ind = interface_list.indexOf(textad_geo.region_name);
 			if(interface_ind !== -1){
-				dating.region = val[interface_ind];
+				dating.region = val[interface_ind].toUpperCase();
 				
 				//now find it in the xml list
 				list = [];
 				for(i=0; i<len; i++)
-					list.push(opt[i].getAttribute("value").toLowerCase());
+					list.push(option_list[i].getAttribute("value").toLowerCase());
 				
 				ind = list.indexOf(dating.region);
 				console.log('region set - '+ind+' : '+interface_list[interface_ind] + '['+val[interface_ind]+']');
@@ -206,9 +220,18 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 				return;  //couldn't find region, don't try city
 			}
 			
-			//mark the match as selected and make the list public
-			$(opt[ind]).attr("selected", "selected");
-			obj.sel_locState = opt;
+			obj.sel_locState = [];
+			$select = $('#'+output_select_ids[1]).appendTo('body');
+
+			//console.log(dating.region);
+
+			$.each(option_list, function(inde, valu){
+				option_value = valu.getAttribute("value");
+				$insert_option = $option_tpl.clone().text(valu.childNodes[0].nodeValue).attr("value", option_value)
+				if(option_value == dating.region)$insert_option.attr("selected", "selected");
+				obj.sel_locState.push($insert_option);
+				$select.append($insert_option);
+			});
 			
 			PREDICT_LOCATION.datingLocation();
 			return;
@@ -222,8 +245,8 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 			ind = list.indexOf(textad_geo.city);
 			if(ind !== -1){
 				cityFound = true;
-				console.log('city set - '+ind+' : '+list[ind] + '['+opt[ind].getAttribute("value")+']');
-				dating.city = opt[ind].getAttribute("value");
+				console.log('city set - '+ind+' : '+list[ind] + '['+option_list[ind].getAttribute("value")+']');
+				dating.city = option_list[ind].getAttribute("value");
 			}
 			else{
 				//fallback, try without spaces in city name
@@ -241,9 +264,16 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 				return; //couldn't find city
 			}
 			
-			//mark the match as selected and make the list public
-			$(opt[ind]).attr("selected", "selected");
-			obj.sel_locCity = opt;
+			obj.sel_locCity = [];
+			$select = $('#'+output_select_ids[2]).appendTo('body');
+
+			$.each(option_list, function(inde, valu){
+				option_value = valu.getAttribute("value");
+				$insert_option = $option_tpl.clone().text(valu.childNodes[0].nodeValue).attr("value", option_value)
+				if(option_value == dating.city)$insert_option.attr("selected", "selected");
+				obj.sel_locCity.push($insert_option);
+				$select.append($insert_option);
+			});
 		}
 		
 		return;

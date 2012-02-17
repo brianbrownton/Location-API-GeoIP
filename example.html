@@ -4,7 +4,7 @@
     <title>Predictive location example</title>
     <SCRIPT TYPE="text/javascript" src="PREDICT_LOCATION.js"></SCRIPT>
     <SCRIPT TYPE="text/javascript">
-        function geoLocation(json){
+        /*function geoLocation(json){
         //  json.country_code = "AU";
         //  json.country_name = "Australia";
         //  json.city_region = "07";
@@ -28,14 +28,16 @@
             //PREDICT_LOCATION.init(json);
         }
 
-        /*$(window).load(function(){
+        $(window).load(function(){
             $.getScript('http://textad.xxxmatch.com/if/1/2213/0/');
         });*/
 
-        PREDICT_LOCATION.init('http://textad.xxxmatch.com/if/1/5426/0/');
+        PREDICT_LOCATION.init('http://textad.xxxmatch.com/if/1/5426/0/', 'sel_locCountry', 'sel_locState', 'sel_locCity');
     </SCRIPT>
 </head>
 <body>
-
+<select id="sel_locCountry"></select>
+<select id="sel_locState"></select>
+<select id="sel_locCity"></select>
 </body>
 </html>
