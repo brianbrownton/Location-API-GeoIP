@@ -1,6 +1,6 @@
-var PREDICT_LOCATION = (function($){
-	"use strict";
-	
+;"use strict";
+var PREDICT_LOCATION = (function(window, document, undefined){
+
 	// Add indexOf method to arrays, mainly for IE
     if( !Array.indexOf ){
         Array.prototype.indexOf = function(obj) {
@@ -16,12 +16,14 @@ var PREDICT_LOCATION = (function($){
     }
 	
 	var obj = {}, //our return object, "public" access
+		self = this,
+		geo_ip_url,
+		load_flag = false,
 		textad_geo, //going to store or json geo response
 		buildLink = function(type)
 		{
 			//set these 2 as variables because referencing the DOM is costly (performance) in JS
-			var docdom = document.domain,
-				lh = location.href,
+			var lh = location.href,
 				lhn = location.hostname;
 			
 			if(lhn == "localhost" || lhn.substring(0, 3) == "192" || lhn.substring(0, 3) == "127")
@@ -36,7 +38,7 @@ var PREDICT_LOCATION = (function($){
 				return newLoc;
 			}
 			
-			if( type == 'location' ) return "http://" + docdom + "/ext_api/get_location.php";
+			if( type == 'location' ) return "http://" + document.domain + "/ext_api/get_location.php";
 		},
 		bl = (parent.buildLink || buildLink), //if buildlink is global, prefer it
 		dating = {}, //stores our matched geo/datingDB locations
@@ -75,7 +77,28 @@ var PREDICT_LOCATION = (function($){
 			"va" : "us51" //virginia
 		}
 	
-	obj.init = function(json){
+	obj.init = function(geoLoc){
+		geo_ip_url = geoLoc;
+		PREDICT_LOCATION.testjQuery();
+	}
+
+	obj.testjQuery = function(){
+		if (typeof window.jQuery == "undefined"){
+			if(!load_flag){
+				load_flag = true;
+				var script = document.createElement('script');
+				script.setAttribute("type","text/javascript");
+				script.setAttribute("src", "http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js");
+				if (typeof script!="undefined")
+					document.getElementsByTagName("head")[0].appendChild(script);
+			}
+			setTimeout(PREDICT_LOCATION.testjQuery, 100);
+		} else {
+			$.getScript(geo_ip_url);
+		}
+	}
+
+	obj.config = function(json){
 		textad_geo = json;
 		
 		//use either city_region or region_name
@@ -86,7 +109,7 @@ var PREDICT_LOCATION = (function($){
 		textad_geo.country_name = textad_geo.country_name.toLowerCase();
 		textad_geo.region_name = textad_geo.region_name.toLowerCase();
 		textad_geo.city = textad_geo.city.toLowerCase();
-		
+
 		PREDICT_LOCATION.datingLocation();
 	}
 	
@@ -121,9 +144,8 @@ var PREDICT_LOCATION = (function($){
 			len = opt.length;
 		
 		//throw xml options into string array
-		for(i=0; i<len; i++){
+		for(i=0; i<len; i++)
 			list.push(opt[i].childNodes[0].nodeValue.toLowerCase());
-		}
 		
 		if(selector==="sel_locCountry"){
 			ind = list.indexOf(textad_geo.country_name);
@@ -134,9 +156,8 @@ var PREDICT_LOCATION = (function($){
 			else{
 				//fallback, try matching based on country code
 				list = [];
-				for(i=0; i<len; i++){
+				for(i=0; i<len; i++)
 					list.push(opt[i].getAttribute("value").toLowerCase());
-				}
 				
 				ind = list.indexOf(textad_geo.country_code);
 				if(ind !== -1){
@@ -174,9 +195,8 @@ var PREDICT_LOCATION = (function($){
 				
 				//now find it in the xml list
 				list = [];
-				for(i=0; i<len; i++){
+				for(i=0; i<len; i++)
 					list.push(opt[i].getAttribute("value").toLowerCase());
-				}
 				
 				ind = list.indexOf(dating.region);
 				console.log('region set - '+ind+' : '+interface_list[interface_ind] + '['+val[interface_ind]+']');
@@ -231,4 +251,4 @@ var PREDICT_LOCATION = (function($){
 
 	
 	return obj;
-}(jQuery));
+}(this, document));
