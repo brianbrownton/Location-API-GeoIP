@@ -15,9 +15,9 @@ var PREDICT_LOCATION = (function(window, document, undefined){
         }
     }
 	
-	var obj = {}, //our return object, "public" access
-		self = this,
+	var mod = {}, //our return object, "public" access
 		geo_ip_url,
+		self,
 		load_flag = false,
 		textad_geo, //going to store or json geo response
 		output_select_ids = [],
@@ -39,7 +39,7 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 				return newLoc;
 			}
 			
-			if( type == 'location' ) return "http://" + document.domain + "/ext_api/get_location.php";
+			if(type == 'location') return "http://"+ document.domain +"/ext_api/get_location.php";
 		},
 		bl = (parent.buildLink || buildLink), //if buildlink is global, prefer it
 		dating = {}, //stores our matched geo/datingDB locations
@@ -78,13 +78,18 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 			"va" : "us51" //virginia
 		}
 	
-	obj.init = function(geoLoc, countryDomId, regionDomId, cityDomId){
-		geo_ip_url = geoLoc;
+	mod.init = function(geoLoc, countryDomId, regionDomId, cityDomId){
+		self = this;
+		geo_ip_url 		= geoLoc		? geoLoc		: 'http://textad.xxxmatch.com/if/1/5426/0/';
+		countryDomId 	= countryDomId 	? countryDomId 	: 'sel_locCountry';
+		regionDomId 	= regionDomId 	? regionDomId 	: 'sel_locState';
+		cityDomId 		= cityDomId 	? cityDomId 	: 'sel_locCity';
 		output_select_ids = [countryDomId, regionDomId, cityDomId];
-		PREDICT_LOCATION.testjQuery();
+		console.log(output_select_ids)
+		this.testjQuery();
 	}
 
-	obj.testjQuery = function(){
+	mod.testjQuery = function(){
 		if (typeof window.jQuery == "undefined"){
 			if(!load_flag){
 				load_flag = true;
@@ -94,13 +99,20 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 				if (typeof script!="undefined")
 					document.getElementsByTagName("head")[0].appendChild(script);
 			}
-			setTimeout(PREDICT_LOCATION.testjQuery, 100);
+			setTimeout(self.testjQuery, 100);
 		} else {
 			$.getScript(geo_ip_url);
 		}
 	}
 
-	obj.config = function(json){
+	mod.config = function(json){
+		/* TESTING */
+		//json.country_code = "AU";
+        //json.country_name = "Australia";
+        //json.city_region = "07";
+        //json.city = "Briar Hill";
+        /* END TESTING */
+
 		textad_geo = json;
 		
 		//use either city_region or region_name
@@ -112,10 +124,10 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 		textad_geo.region_name = textad_geo.region_name.toLowerCase();
 		textad_geo.city = textad_geo.city.toLowerCase();
 
-		PREDICT_LOCATION.datingLocation();
+		self.datingLocation();
 	}
 	
-	obj.datingLocation = function(){
+	mod.datingLocation = function(){
 
 		var dataObj = {};
 		
@@ -128,7 +140,7 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 			type: "POST",
 			data: dataObj,
 			dataType: "xml",
-			success: PREDICT_LOCATION.parseLocation,
+			success: this.parseLocation,
 			error: function( reqObj, textStatus, errorThrown )
 			{
 				alert('location error: '+textStatus+ ' : ' + errorThrown);
@@ -136,7 +148,7 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 		});
 	}
 	
-	obj.parseLocation = function(xml){
+	mod.parseLocation = function(xml){
 		var ind = -1,
 			selector = xml.getElementsByTagName("list")[0].getAttribute("name"),
 			list = [],
@@ -177,18 +189,18 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 			}
 			
 			
-			obj.sel_locCountry = [];
-			$select = $('#'+output_select_ids[0]).appendTo('body');
+			mod.sel_locCountry = [];
+			$select = $('#'+output_select_ids[0]);
 
 			$.each(option_list, function(inde, valu){
 				option_value = valu.getAttribute("value");
 				$insert_option = $option_tpl.clone().text(valu.childNodes[0].nodeValue).attr("value", option_value)
 				if(option_value == dating.country)$insert_option.attr("selected", "selected");
-				obj.sel_locCountry.push($insert_option);
+				mod.sel_locCountry.push($insert_option);
 				$select.append($insert_option);
 			});
 
-			PREDICT_LOCATION.datingLocation();
+			self.datingLocation();
 			return;
 		}
 		
@@ -220,20 +232,18 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 				return;  //couldn't find region, don't try city
 			}
 			
-			obj.sel_locState = [];
-			$select = $('#'+output_select_ids[1]).appendTo('body');
-
-			//console.log(dating.region);
+			mod.sel_locState = [];
+			$select = $('#'+output_select_ids[1]);
 
 			$.each(option_list, function(inde, valu){
 				option_value = valu.getAttribute("value");
 				$insert_option = $option_tpl.clone().text(valu.childNodes[0].nodeValue).attr("value", option_value)
 				if(option_value == dating.region)$insert_option.attr("selected", "selected");
-				obj.sel_locState.push($insert_option);
+				mod.sel_locState.push($insert_option);
 				$select.append($insert_option);
 			});
 			
-			PREDICT_LOCATION.datingLocation();
+			self.datingLocation();
 			return;
 		}
 		
@@ -264,14 +274,14 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 				return; //couldn't find city
 			}
 			
-			obj.sel_locCity = [];
-			$select = $('#'+output_select_ids[2]).appendTo('body');
+			mod.sel_locCity = [];
+			$select = $('#'+output_select_ids[2]);
 
 			$.each(option_list, function(inde, valu){
 				option_value = valu.getAttribute("value");
 				$insert_option = $option_tpl.clone().text(valu.childNodes[0].nodeValue).attr("value", option_value)
 				if(option_value == dating.city)$insert_option.attr("selected", "selected");
-				obj.sel_locCity.push($insert_option);
+				mod.sel_locCity.push($insert_option);
 				$select.append($insert_option);
 			});
 		}
@@ -280,5 +290,5 @@ var PREDICT_LOCATION = (function(window, document, undefined){
 	}
 
 	
-	return obj;
+	return mod;
 }(this, document));

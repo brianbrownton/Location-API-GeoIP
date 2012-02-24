@@ -32,12 +32,18 @@
             $.getScript('http://textad.xxxmatch.com/if/1/2213/0/');
         });*/
 
-        PREDICT_LOCATION.init('http://textad.xxxmatch.com/if/1/5426/0/', 'sel_locCountry', 'sel_locState', 'sel_locCity');
+        // optional arguments: init(geo_url, country_dom_id, region_dom_id, city_dom_id)
+        PREDICT_LOCATION.init();
     </SCRIPT>
+    <style type="text/css">
+    select{
+        width:250px;
+    }
+    </style>
 </head>
 <body>
-<select id="sel_locCountry"></select>
-<select id="sel_locState"></select>
-<select id="sel_locCity"></select>
+<div>Country<br/><select id="sel_locCountry"></select></div>
+<div>Region<br/><select id="sel_locState"></select></div>
+<div>City<br/><select id="sel_locCity"></select></div>
 </body>
 </html>
